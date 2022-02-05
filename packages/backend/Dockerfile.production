@@ -1,0 +1,12 @@
+FROM node:lts-alpine
+
+ARG NODE_ENV=staging
+
+WORKDIR /usr/src/app/backend
+COPY . .
+RUN yarn --silent
+RUN yarn build
+
+# Value set in .env file.
+EXPOSE $BACKEND_PORT
+CMD ["node", "dist/main"]

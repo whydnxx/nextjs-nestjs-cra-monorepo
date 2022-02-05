@@ -1,0 +1,12 @@
+FROM node:lts-alpine as dependencies
+WORKDIR /usr/src/app/landing
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+FROM node:lts-alpine as runner
+WORKDIR /usr/src/app/landing
+
+COPY . /usr/src/app/landing
+
+EXPOSE $LANDING_PORT
+CMD ["yarn", "dev"]

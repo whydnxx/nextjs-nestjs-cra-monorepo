@@ -1,0 +1,90 @@
+version: "3.9"
+services:
+  landing:
+    container_name: landing
+    build:
+      context: ./packages/landing
+      dockerfile: Dockerfile.local
+    restart: always
+    env_file: .env
+    ports:
+      - "${LANDING_PORT}:${LANDING_PORT}"
+    volumes:
+      - ./packages/landing:/usr/src/app/landing
+      - /usr/src/app/landing/node_modules
+    networks:
+      - ez-network
+    command: "yarn dev"
+  backoffice:
+    container_name: backoffice
+    build:
+      context: ./packages/backoffice
+      dockerfile: Dockerfile.local
+    restart: always
+    env_file: .env
+    ports:
+      - "${BACKOFFICE_PORT}:${BACKOFFICE_PORT}"
+    volumes:
+      - "./packages/backoffice/src:/usr/src/app/backoffice/src"
+    networks:
+      - ez-network
+    command: "yarn start"
+  backend:
+    container_name: backend
+    build:
+      context: ./packages/backend
+      dockerfile: Dockerfile.local
+    restart: always
+    env_file: .env
+    volumes:
+      - ./packages/backend:/usr/src/app/backend
+      - ./scripts/wait.sh:/wait.sh
+      - /usr/src/app/backend/node_modules
+    networks:
+      - ez-network
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    depends_on:
+      - db
+    links:
+      - db
+  db:
+    image: postgres:12-alpine
+    restart: always
+    container_name: db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - ez-network
+  pgadmin-portal:
+    image: dpage/pgadmin4
+    restart: always
+    container_name: pgadmin-portal
+    env_file:
+      - .env
+    environment:
+      PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
+      PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
+    volumes:
+      - pgadmin:/root/.pgadmin
+    ports:
+      - "${PGADMIN_PORT}:80"
+    depends_on:
+      - db
+    networks:
+      - ez-network
+volumes:
+  pgdata:
+  pgadmin:
+networks:
+  ez-network:
+    driver: bridge

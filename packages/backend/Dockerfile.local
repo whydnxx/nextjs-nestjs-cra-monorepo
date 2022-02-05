@@ -1,0 +1,12 @@
+FROM node:lts-alpine
+WORKDIR /usr/src/app/backend
+
+RUN npm i -g @nestjs/cli --silent
+
+COPY package.json yarn.lock ./
+
+RUN yarn --silent
+COPY . .
+# Value set in .env file.
+EXPOSE $BACKEND_PORT
+CMD ["yarn", "start:debug"]
